@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>yuyu-tei Card Scraper</title>
+<title>One Piece TCG Database</title>
 <style>
 :root {
   --bg:         #1e1e2e;
@@ -322,6 +322,20 @@ tbody td {
   flex-shrink: 0;
 }
 
+/* ── Disclaimer bar ── */
+#disclaimer-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 5px 14px;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+#disclaimer-bar a { color: var(--accent); text-decoration: none; }
+#disclaimer-bar a:hover { text-decoration: underline; }
+
 /* ── Empty states ── */
 .empty-msg {
   color: var(--text-dim);
@@ -373,7 +387,7 @@ tbody td {
 
 <!-- ── Top bar ─────────────────────────────────────────── -->
 <div id="topbar">
-  <h1>yuyu-tei Card Scraper</h1>
+  <h1>One Piece TCG Database</h1>
   <span id="last-updated" style="color:var(--text-dim);font-size:11px">Loading…</span>
   <div id="topbar-right">
     <label style="color:var(--text-dim);font-size:12px;display:flex;align-items:center;gap:6px">
@@ -448,6 +462,11 @@ tbody td {
     <span id="status-label">Loading…</span>
     <span id="table-summary"></span>
     <span id="basket-total-label"></span>
+  </div>
+  <div id="disclaimer-bar">
+    Prices sourced from <a href="https://yuyu-tei.jp" target="_blank" rel="noopener noreferrer">yuyu-tei.jp</a> and updated daily. This site is not affiliated with or endorsed by yuyu-tei.
+    One Piece card names and images are © Eiichiro Oda / Shueisha · Toei Animation · © Bandai.
+    All data is for personal reference only. Prices may not reflect current availability or stock.
   </div>
 
 </div>
