@@ -27,7 +27,7 @@ jobs:
       - name: Run scraper
         run: |
           # Read all URLs from yyt.txt and pass them as arguments to the scraper
-          python yuyu_scraper.py --out yuyu_cards_new.csv $(cat yyt.txt | tr '\n' ' ')
+          python yuyu_scraper.py --out yuyu_cards_new.csv --names names.csv $(cat yyt.txt | tr '\n' ' ')
 
       - name: Validate and replace CSV
         run: |
