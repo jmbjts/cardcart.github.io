@@ -11,6 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://cardcart.site">
 <link rel="canonical" href="https://cardcart.site">
+<link rel="icon" type="image/png" href="favicon.png">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JXRF2KJ0KZ"></script>
 <script>
@@ -304,7 +305,7 @@ tbody td {
 #basket-header-right { margin-left: auto; display: flex; gap: 6px; }
 #basket-content { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 0; }
 #basket-table-wrap { flex-shrink: 0; overflow-x: auto; border-bottom: 1px solid var(--border); }
-#basket-table { min-width: 600px; }
+#basket-table { min-width: 1100px; }
 
 .bcol-series  { width: 100px; }
 .bcol-section { width: 90px; }
@@ -312,8 +313,10 @@ tbody td {
 .bcol-name    { width: 160px; }
 .bcol-en-name { min-width: 160px; }
 .bcol-qty     { width: 84px; text-align: center !important; padding: 0 !important; }
-.bcol-unit    { width: 90px; text-align: right !important; }
-.bcol-sub     { width: 110px; text-align: right !important; }
+.bcol-unit     { width: 90px;  text-align: right !important; }
+.bcol-sub      { width: 100px; text-align: right !important; }
+.bcol-unit-conv{ width: 90px;  text-align: right !important; }
+.bcol-sub-conv { width: 110px; text-align: right !important; }
 
 /* ── Thumbnails ── */
 #thumb-section {
@@ -465,7 +468,7 @@ tbody td {
 
 <!-- ── Top bar ─────────────────────────────────────────── -->
 <div id="topbar">
-  <h1>One Piece TCG Database</h1>
+  <img src="logo/IMG_9041.PNG" alt="CardCart" id="site-logo" style="height:32px;display:block;">
   <span id="last-updated" style="color:var(--text-dim);font-size:11px">Loading…</span>
   <div id="topbar-right">
     <label style="color:var(--text-dim);font-size:12px;display:flex;align-items:center;gap:6px">
@@ -479,7 +482,7 @@ tbody td {
 <!-- ── Tab bar ─────────────────────────────────────────── -->
 <div id="tabbar">
   <button class="tab active" id="tab-cards"  onclick="showTab('cards')">Cards</button>
-  <button class="tab"        id="tab-basket" onclick="showTab('basket')">Basket</button>
+  <button class="tab"        id="tab-basket" onclick="showTab('basket')">Cart</button>
   <div id="tabbar-right">
     <button class="action" onclick="resetColWidths()" title="Reset column widths to default">Reset Columns</button>
   </div>
@@ -559,10 +562,10 @@ tbody td {
 <div id="basket-panel">
 
   <div id="basket-header">
-    <span id="basket-summary">No items in basket.</span>
+    <span id="basket-summary">No items in cart.</span>
     <div id="basket-header-right">
-      <button class="action" onclick="exportBasketCSV()">Export Basket CSV</button>
-      <button class="action" onclick="clearBasket()">Clear Basket</button>
+      <button class="action" onclick="exportBasketCSV()">Export Cart CSV</button>
+      <button class="action" onclick="clearBasket()">Clear Cart</button>
     </div>
   </div>
 
@@ -577,13 +580,15 @@ tbody td {
             <th class="bcol-name"    >Card Name (JP)</th>
             <th class="bcol-en-name" >Card Name (EN)</th>
             <th class="bcol-qty no-sort">Qty</th>
-            <th class="bcol-unit"   >Unit (JPY)</th>
-            <th class="bcol-sub"    >Subtotal</th>
+            <th class="bcol-unit"    >Unit (JPY)</th>
+            <th class="bcol-sub"     >Subtotal (JPY)</th>
+            <th class="bcol-unit-conv">Unit (Conv.)</th>
+            <th class="bcol-sub-conv" >Subtotal (Conv.)</th>
           </tr>
         </thead>
         <tbody id="basket-tbody"></tbody>
       </table>
-      <div id="basket-empty" class="empty-msg">Your basket is empty.<br>Use the + buttons on the Cards tab to add items.</div>
+      <div id="basket-empty" class="empty-msg">Your cart is empty.<br>Use the + buttons on the Cards tab to add items.</div>
     </div>
 
     <div id="thumb-section">
@@ -1025,14 +1030,14 @@ function updateBasketFooter() {
   });
   const rate = currency !== 'JPY' ? (rates[currency] ?? null) : null;
   if (totalQty === 0) { $('basket-total-label').textContent = ''; return; }
-  let text = `${totalQty} in basket · ${fmt(totalJpy, 'JPY')}`;
+  let text = `${totalQty} in cart · ${fmt(totalJpy, 'JPY')}`;
   if (rate) text += ` (${fmt(totalJpy * rate, currency)})`;
   $('basket-total-label').textContent = text;
 }
 
 function updateBasketBadge() {
   const count = Object.values(basket).reduce((a, b) => a + b, 0);
-  $('tab-basket').textContent = count > 0 ? `Basket (${count})` : 'Basket';
+  $('tab-basket').textContent = count > 0 ? `Cart (${count})` : 'Cart';
 }
 
 // ── Basket rendering ──────────────────────────────────────────────────────────
@@ -1051,7 +1056,7 @@ function renderBasket() {
     tbody.innerHTML = '';
     thumbs.innerHTML = '';
     $('basket-grand-total').textContent = '';
-    $('basket-summary').textContent = 'No items in basket.';
+    $('basket-summary').textContent = 'No items in cart.';
     return;
   }
   empty.style.display = 'none';
@@ -1062,8 +1067,10 @@ function renderBasket() {
   items.forEach(({ key, qty, card }, i) => {
     const jpy = parseJpy(card.price);
     const sub = jpy !== null ? jpy * qty : 0;
-    const unitStr = jpy !== null ? fmt(jpy, 'JPY') : '—';
-    const subStr  = jpy !== null ? (rate ? fmt(sub * rate, currency) : fmt(sub, 'JPY')) : '—';
+    const unitStr     = jpy !== null ? fmt(jpy, 'JPY')              : '—';
+    const subStr      = jpy !== null ? fmt(sub, 'JPY')              : '—';
+    const unitConvStr = (rate && jpy !== null) ? fmt(jpy * rate, currency)  : '—';
+    const subConvStr  = (rate && jpy !== null) ? fmt(sub * rate, currency)  : '—';
     if (jpy !== null) { totalJpy += sub; totalQty += qty; }
 
     const rowBg   = i % 2 === 0 ? 'var(--row-even)' : 'var(--row-odd)';
@@ -1081,8 +1088,10 @@ function renderBasket() {
           <button class="qty-btn qty-plus" data-key="${esc(key)}" data-delta="1">+</button>
         </div>
       </td>
-      <td class="bcol-unit">${unitStr}</td>
-      <td class="bcol-sub" >${subStr}</td>
+      <td class="bcol-unit"    >${unitStr}</td>
+      <td class="bcol-sub"     >${subStr}</td>
+      <td class="bcol-unit-conv">${unitConvStr}</td>
+      <td class="bcol-sub-conv" >${subConvStr}</td>
     </tr>`;
 
     const imgTag = card.image_url
