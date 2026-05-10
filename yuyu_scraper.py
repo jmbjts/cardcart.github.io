@@ -11,9 +11,10 @@ Usage:
 import sys
 import csv
 import io
+import re
 import time
 import argparse
-from typing import List, Optional
+from typing import List, Optional, Dict
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from html.parser import HTMLParser
@@ -219,9 +220,45 @@ def print_table(cards: List[dict]):
     print()
 
 
-def save_csv(cards: List[dict], path: str):
+def load_name_mapping(path: str) -> Dict[str, str]:
+    mapping: Dict[str, str] = {}
+    try:
+        with open(path, newline="", encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                jp = row.get("Japanese", "").strip()
+                en = row.get("English", "").strip()
+                if jp:
+                    mapping[jp] = en
+        print(f"Loaded {len(mapping)} name mappings from {path}")
+    except FileNotFoundError:
+        print(f"Warning: name mapping file '{path}' not found — en_name column will be empty", file=sys.stderr)
+    return mapping
+
+
+def resolve_en_name(jp: str, mapping: Dict[str, str]) -> str:
+    jp = jp.strip()
+    if jp in mapping:
+        return mapping[jp]
+    base = re.sub(r"\s*[\(（][^\)）]*[\)）]\s*$", "", jp).strip()
+    if base in mapping:
+        suffix = jp[len(base):].strip()
+        return mapping[base] + " " + suffix
+    return ""
+
+
+def save_csv(cards: List[dict], path: str, mapping: Optional[Dict[str, str]] = None):
+    has_mapping = bool(mapping)
+    fields = ["series", "section", "number", "name"]
+    if has_mapping:
+        fields.append("en_name")
+    fields += ["price", "image_url"]
+
+    if has_mapping:
+        for card in cards:
+            card["en_name"] = resolve_en_name(card.get("name", ""), mapping)
+
     with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["series", "section", "number", "name", "price", "image_url"])
+        writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(cards)
     print(f"Saved {len(cards)} row(s) to {path}")
@@ -240,7 +277,14 @@ def main():
         metavar="FILE.csv",
         help="Save results to a CSV file instead of printing",
     )
+    parser.add_argument(
+        "--names",
+        metavar="MAPPING.csv",
+        help="CSV file with Japanese,English name columns to add en_name column",
+    )
     args = parser.parse_args()
+
+    mapping = load_name_mapping(args.names) if args.names else {}
 
     all_cards: list[dict] = []
     for i, url in enumerate(args.urls):
@@ -249,7 +293,7 @@ def main():
             time.sleep(1)  # polite delay between requests
 
     if args.out:
-        save_csv(all_cards, args.out)
+        save_csv(all_cards, args.out, mapping or None)
     else:
         print_table(all_cards)
 

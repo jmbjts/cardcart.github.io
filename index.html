@@ -191,7 +191,8 @@ tbody td {
 .col-series  { width: 90px; }
 .col-section { width: 90px; }
 .col-number  { width: 100px; }
-.col-name    { width: auto; min-width: 160px; }
+.col-name    { width: 160px; }
+.col-en-name { width: auto; min-width: 160px; }
 .col-price   { width: 90px; text-align: right !important; }
 .col-conv    { width: 100px; text-align: right !important; }
 .col-qty     { width: 84px; text-align: center !important; padding: 0 !important; }
@@ -270,7 +271,8 @@ tbody td {
 .bcol-series  { width: 100px; }
 .bcol-section { width: 90px; }
 .bcol-number  { width: 100px; }
-.bcol-name    { min-width: 160px; }
+.bcol-name    { width: 160px; }
+.bcol-en-name { min-width: 160px; }
 .bcol-qty     { width: 84px; text-align: center !important; padding: 0 !important; }
 .bcol-unit    { width: 90px; text-align: right !important; }
 .bcol-sub     { width: 110px; text-align: right !important; }
@@ -349,7 +351,7 @@ tbody td {
   #preview-panel { display: none; }
   #filter-bar input { width: 110px; }
   .ms-trigger { width: 140px; }
-  table { width: 650px; }
+  table { width: 820px; }
 }
 
 @media (max-width: 480px) {
@@ -372,7 +374,7 @@ tbody td {
   .ms-panel { min-width: 160px; }
 
   /* Table — fixed pixel width forces horizontal scroll in the wrapper */
-  table { width: 650px; }
+  table { width: 820px; }
 
   /* Footer */
   #footer { padding: 4px 10px; font-size: 11px; gap: 8px; flex-wrap: wrap; }
@@ -440,7 +442,8 @@ tbody td {
             <th class="col-series"  data-col="series"  onclick="sortBy('series')" >Series</th>
             <th class="col-section" data-col="section" onclick="sortBy('section')">Section</th>
             <th class="col-number"  data-col="number"  onclick="sortBy('number')" >Card No.</th>
-            <th class="col-name"    data-col="name"    onclick="sortBy('name')"   >Card Name</th>
+            <th class="col-name"    data-col="name"    onclick="sortBy('name')"   >Card Name (JP)</th>
+            <th class="col-en-name" data-col="en_name" onclick="sortBy('en_name')">Card Name (EN)</th>
             <th class="col-price"   data-col="price"   onclick="sortBy('price')"  >Price (JPY)</th>
             <th class="col-conv"    data-col="conv"    onclick="sortBy('conv')"   >Conv. Price</th>
             <th class="col-qty no-sort" data-col="qty" onclick="sortBy('qty')"   >Qty</th>
@@ -489,8 +492,9 @@ tbody td {
           <tr>
             <th class="bcol-series" >Series</th>
             <th class="bcol-section">Section</th>
-            <th class="bcol-number" >Card No.</th>
-            <th class="bcol-name"   >Card Name</th>
+            <th class="bcol-number"  >Card No.</th>
+            <th class="bcol-name"    >Card Name (JP)</th>
+            <th class="bcol-en-name" >Card Name (EN)</th>
             <th class="bcol-qty no-sort">Qty</th>
             <th class="bcol-unit"   >Unit (JPY)</th>
             <th class="bcol-sub"    >Subtotal</th>
@@ -755,14 +759,14 @@ function applyFilters() {
   const fSer = getMsSelected('ms-series');
   const fSec = getMsSelected('ms-section');
   const fNum = $('flt-number').value.toLowerCase();
-  const fNam = $('flt-name').value.toLowerCase();
+  const fNam = $('flt-name').value.toLowerCase();  // searches both JP and EN name
 
   filtered = [];
   cards.forEach((c, idx) => {
     if (fSer && !fSer.has(c.series))                      return;
     if (fSec && !fSec.has(c.section))                     return;
     if (fNum && !c.number?.toLowerCase().includes(fNum))  return;
-    if (fNam && !c.name?.toLowerCase().includes(fNam))    return;
+    if (fNam && !c.name?.toLowerCase().includes(fNam) && !c.en_name?.toLowerCase().includes(fNam)) return;
     filtered.push({idx, card: c});
   });
 
@@ -832,8 +836,9 @@ function renderTable() {
     html += `<tr data-idx="${idx}" style="background:${rowBg}" class="${sel}">
       <td class="col-series" >${esc(card.series)}</td>
       <td class="col-section">${esc(card.section)}</td>
-      <td class="col-number" >${esc(card.number)}</td>
-      <td class="col-name"   >${esc(card.name)}</td>
+      <td class="col-number"  >${esc(card.number)}</td>
+      <td class="col-name"    >${esc(card.name)}</td>
+      <td class="col-en-name" >${esc(card.en_name ?? '')}</td>
       <td class="col-price"  >${esc(card.price)}</td>
       <td class="col-conv"   >${conv}</td>
       <td class="col-qty">
@@ -968,8 +973,9 @@ function renderBasket() {
     tableHtml += `<tr style="background:${rowBg}">
       <td class="bcol-series" >${esc(card.series)}</td>
       <td class="bcol-section">${esc(card.section)}</td>
-      <td class="bcol-number" >${esc(card.number)}</td>
-      <td class="bcol-name"   >${esc(card.name)}</td>
+      <td class="bcol-number"  >${esc(card.number)}</td>
+      <td class="bcol-name"    >${esc(card.name)}</td>
+      <td class="bcol-en-name" >${esc(card.en_name ?? '')}</td>
       <td class="bcol-qty">
         <div class="qty-cell">
           <button class="qty-btn qty-minus${qty === 0 ? ' dim' : ''}" data-key="${esc(key)}" data-delta="-1">−</button>
