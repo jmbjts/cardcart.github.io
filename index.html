@@ -444,7 +444,6 @@ tbody td {
   <button class="tab"        id="tab-basket" onclick="showTab('basket')">Basket</button>
   <div id="tabbar-right">
     <button class="action" onclick="resetColWidths()" title="Reset column widths to default">Reset Columns</button>
-    <button class="action" onclick="exportAllCSV()">Export CSV</button>
   </div>
 </div>
 
@@ -1191,7 +1190,9 @@ async function init() {
   applyFilters();
   initColResize();
   updateBasketBadge();
-  updateBasketFooter();
+  // If a non-JPY currency was restored, fetch rates so basket/table show converted prices
+  if (currency !== 'JPY') await setCurrency(currency);
+  else updateBasketFooter();
 }
 
 init();
