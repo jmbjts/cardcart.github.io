@@ -2,7 +2,7 @@ name: Daily Card Scrape
 
 on:
   schedule:
-    - cron: '0 2 * * *'   # 2:00 AM UTC every day
+    - cron: '0 2 * * 1'   # 2:00 AM UTC every Monday
   workflow_dispatch:        # adds a "Run workflow" button in the GitHub UI
 
 permissions:
