@@ -470,14 +470,14 @@ tbody td {
       <table id="cards-table">
         <thead id="cards-thead">
           <tr>
-            <th class="col-series"  data-col="series"  onclick="sortBy('series')" >Series</th>
-            <th class="col-section" data-col="section" onclick="sortBy('section')">Section</th>
-            <th class="col-number"  data-col="number"  onclick="sortBy('number')" >Card No.</th>
-            <th class="col-name"    data-col="name"    onclick="sortBy('name')"   >Card Name (JP)</th>
-            <th class="col-en-name" data-col="en_name" onclick="sortBy('en_name')">Card Name (EN)</th>
-            <th class="col-price"   data-col="price"   onclick="sortBy('price')"  >Price (JPY)</th>
-            <th class="col-conv"    data-col="conv"    onclick="sortBy('conv')"   >Conv. Price</th>
-            <th class="col-qty no-sort" data-col="qty" onclick="sortBy('qty')"   >Qty</th>
+            <th class="col-series"  data-col="series"  onclick="sortBy('series')" ><span class="col-label">Series</span></th>
+            <th class="col-section" data-col="section" onclick="sortBy('section')"><span class="col-label">Section</span></th>
+            <th class="col-number"  data-col="number"  onclick="sortBy('number')" ><span class="col-label">Card No.</span></th>
+            <th class="col-name"    data-col="name"    onclick="sortBy('name')"   ><span class="col-label">Card Name (JP)</span></th>
+            <th class="col-en-name" data-col="en_name" onclick="sortBy('en_name')"><span class="col-label">Card Name (EN)</span></th>
+            <th class="col-price"   data-col="price"   onclick="sortBy('price')"  ><span class="col-label">Price (JPY)</span></th>
+            <th class="col-conv"    data-col="conv"    onclick="sortBy('conv')"   ><span class="col-label">Conv. Price</span></th>
+            <th class="col-qty no-sort" data-col="qty" onclick="sortBy('qty')"   ><span class="col-label">Qty</span></th>
           </tr>
         </thead>
         <tbody id="cards-tbody"></tbody>
@@ -841,11 +841,13 @@ function renderTable() {
   const rate = currency !== 'JPY' ? (rates[currency] ?? null) : null;
   const tbody = $('cards-tbody');
 
-  // Update sort arrows in header
+  // Update sort arrows in header (only touch the label span, not the resize handle)
   document.querySelectorAll('#cards-thead th[data-col]').forEach(th => {
     const col = th.dataset.col;
-    const base = th.textContent.replace(/ [▲▼]$/, '');
-    th.textContent = base + (sortCol === col ? (sortDir > 0 ? ' ▲' : ' ▼') : '');
+    const lbl = th.querySelector('.col-label');
+    if (!lbl) return;
+    const base = lbl.textContent.replace(/ [▲▼]$/, '');
+    lbl.textContent = base + (sortCol === col ? (sortDir > 0 ? ' ▲' : ' ▼') : '');
   });
 
   if (filtered.length === 0) {
