@@ -528,7 +528,12 @@ async function loadCSV() {
       download: true, header: true, skipEmptyLines: true,
       complete(res) {
         clearTimeout(timeout);
-        cards = res.data;
+        cards = res.data.map(row => {
+          const clean = {};
+          for (const [k, v] of Object.entries(row))
+            clean[k.trim()] = typeof v === 'string' ? v.trim() : v;
+          return clean;
+        });
         if (cards.length === 0) {
           setStatus('No card data found. Run the GitHub Actions workflow to populate the CSV.');
         } else {
