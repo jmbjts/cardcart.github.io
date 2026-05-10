@@ -221,6 +221,7 @@ def print_table(cards: List[dict]):
 
 
 def load_name_mapping(path: str) -> Dict[str, str]:
+    """Load a Japanese→English name mapping CSV (columns: Japanese, English)."""
     mapping: Dict[str, str] = {}
     try:
         with open(path, newline="", encoding="utf-8-sig") as f:
@@ -235,27 +236,62 @@ def load_name_mapping(path: str) -> Dict[str, str]:
     return mapping
 
 
-def resolve_en_name(jp: str, mapping: Dict[str, str]) -> str:
+def load_exact_mapping(path: str) -> Dict[str, str]:
+    """Load a card-number→English mapping CSV (columns: Card No, Japanese, English)."""
+    mapping: Dict[str, str] = {}
+    try:
+        with open(path, newline="", encoding="utf-8-sig") as f:
+            for row in csv.DictReader(f):
+                card_no = row.get("Card No", "").strip()
+                en = row.get("English", "").strip()
+                if card_no:
+                    mapping[card_no] = en
+        print(f"Loaded {len(mapping)} exact mappings from {path}")
+    except FileNotFoundError:
+        print(f"Warning: exact mapping file '{path}' not found", file=sys.stderr)
+    return mapping
+
+
+def resolve_en_name(
+    card_number: str,
+    jp: str,
+    exact: Dict[str, str],
+    loose: Dict[str, str],
+) -> str:
+    # Tier 1: match by card number
+    num = card_number.strip()
+    if num and num in exact:
+        return exact[num]
+
+    # Tier 2: loose JP name match with suffix stripping
     jp = jp.strip()
-    if jp in mapping:
-        return mapping[jp]
+    if jp in loose:
+        return loose[jp]
     base = re.sub(r"\s*[\(（][^\)）]*[\)）]\s*$", "", jp).strip()
-    if base in mapping:
+    if base in loose:
         suffix = jp[len(base):].strip()
-        return mapping[base] + " " + suffix
+        return (loose[base] + " " + suffix).strip()
+
     return ""
 
 
-def save_csv(cards: List[dict], path: str, mapping: Optional[Dict[str, str]] = None):
-    has_mapping = bool(mapping)
+def save_csv(
+    cards: List[dict],
+    path: str,
+    exact: Optional[Dict[str, str]] = None,
+    loose: Optional[Dict[str, str]] = None,
+):
+    has_mapping = bool(exact or loose)
     fields = ["series", "section", "number", "name"]
     if has_mapping:
         fields.append("en_name")
     fields += ["price", "image_url"]
 
     if has_mapping:
+        ex = exact or {}
+        lo = loose or {}
         for card in cards:
-            card["en_name"] = resolve_en_name(card.get("name", ""), mapping)
+            card["en_name"] = resolve_en_name(card.get("number", ""), card.get("name", ""), ex, lo)
 
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
@@ -279,12 +315,18 @@ def main():
     )
     parser.add_argument(
         "--names",
-        metavar="MAPPING.csv",
-        help="CSV file with Japanese,English name columns to add en_name column",
+        metavar="LOOSE.csv",
+        help="CSV with Japanese,English columns — fallback name-based lookup",
+    )
+    parser.add_argument(
+        "--exact-names",
+        metavar="EXACT.csv",
+        help="CSV with 'Card No',Japanese,English columns — primary card-number lookup",
     )
     args = parser.parse_args()
 
-    mapping = load_name_mapping(args.names) if args.names else {}
+    exact = load_exact_mapping(args.exact_names) if args.exact_names else {}
+    loose = load_name_mapping(args.names) if args.names else {}
 
     all_cards: list[dict] = []
     for i, url in enumerate(args.urls):
@@ -293,7 +335,7 @@ def main():
             time.sleep(1)  # polite delay between requests
 
     if args.out:
-        save_csv(all_cards, args.out, mapping or None)
+        save_csv(all_cards, args.out, exact or None, loose or None)
     else:
         print_table(all_cards)
 
