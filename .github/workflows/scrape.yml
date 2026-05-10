@@ -12,6 +12,9 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
 
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,24 +32,33 @@ jobs:
       - name: Validate and replace CSV
         run: |
           # Only replace the live CSV if the new one actually has data rows
-          LINES=$(wc -l < yuyu_cards_new.csv)
-          if [ "$LINES" -gt 1 ]; then
-            mv yuyu_cards_new.csv yuyu_cards_latest.csv
-            echo "Scrape succeeded: $LINES lines"
+          if [ -f yuyu_cards_new.csv ]; then
+            LINES=$(wc -l < yuyu_cards_new.csv)
+            if [ "$LINES" -gt 1 ]; then
+              mv yuyu_cards_new.csv yuyu_cards_latest.csv
+              echo "Scrape succeeded: $LINES lines"
+            else
+              echo "Scrape returned no data — keeping existing CSV"
+              rm -f yuyu_cards_new.csv
+            fi
           else
-            echo "Scrape returned no data — keeping existing CSV"
-            rm -f yuyu_cards_new.csv
+            echo "Scraper produced no output file — keeping existing CSV"
           fi
 
       - name: Write metadata
         run: |
-          COUNT=$(tail -n +2 yuyu_cards_latest.csv | wc -l)
+          if [ -f yuyu_cards_latest.csv ]; then
+            COUNT=$(tail -n +2 yuyu_cards_latest.csv | wc -l)
+          else
+            COUNT=0
+          fi
           echo "{\"updated\":\"$(date -u +%Y-%m-%d)\",\"time\":\"$(date -u +%H:%M) UTC\",\"count\":$COUNT}" > meta.json
 
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add yuyu_cards_latest.csv meta.json
+          git add -f yuyu_cards_latest.csv meta.json 2>/dev/null || true
+          git add meta.json
           git diff --staged --quiet || git commit -m "data: update cards $(date -u +%Y-%m-%d)"
           git push
