@@ -522,14 +522,27 @@ async function setCurrency(cur) {
 async function loadCSV() {
   setStatus('Loading card data…');
   return new Promise(resolve => {
-    Papa.parse(CSV_URL, {
+    const timeout = setTimeout(() => {
+      setStatus('Could not load card data. Check that yuyu_cards_latest.csv exists in the repo.');
+      resolve();
+    }, 10000);
+    Papa.parse(CSV_URL + '?t=' + Date.now(), {
       download: true, header: true, skipEmptyLines: true,
       complete(res) {
+        clearTimeout(timeout);
         cards = res.data;
-        setStatus(`${cards.length} cards loaded.`);
+        if (cards.length === 0) {
+          setStatus('No card data found. Run the GitHub Actions workflow to populate the CSV.');
+        } else {
+          setStatus(`${cards.length} cards loaded.`);
+        }
         resolve();
       },
-      error(err) { setStatus('Error loading data: ' + err.message); resolve(); }
+      error(err) {
+        clearTimeout(timeout);
+        setStatus('Error loading data: ' + err.message);
+        resolve();
+      }
     });
   });
 }
