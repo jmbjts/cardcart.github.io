@@ -429,8 +429,9 @@ tbody td {
         <div class="ms-panel" id="ms-section-panel"></div>
       </div>
     </label>
-    <label>Card No.: <input type="text" id="flt-number" placeholder="filter…" oninput="scheduleFilter()"></label>
-    <label>Name: <input type="text" id="flt-name"    placeholder="filter…" oninput="scheduleFilter()"></label>
+    <label>Card No.: <input type="text" id="flt-number"  placeholder="filter…" oninput="scheduleFilter()"></label>
+    <label>Name (JP): <input type="text" id="flt-name"   placeholder="filter…" oninput="scheduleFilter()"></label>
+    <label>Name (EN): <input type="text" id="flt-en-name" placeholder="filter…" oninput="scheduleFilter()"></label>
     <button class="action" onclick="clearFilters()">Clear</button>
   </div>
 
@@ -759,14 +760,16 @@ function applyFilters() {
   const fSer = getMsSelected('ms-series');
   const fSec = getMsSelected('ms-section');
   const fNum = $('flt-number').value.toLowerCase();
-  const fNam = $('flt-name').value.toLowerCase();  // searches both JP and EN name
+  const fNam   = $('flt-name').value.toLowerCase();
+  const fEnNam = $('flt-en-name').value.toLowerCase();
 
   filtered = [];
   cards.forEach((c, idx) => {
     if (fSer && !fSer.has(c.series))                      return;
     if (fSec && !fSec.has(c.section))                     return;
     if (fNum && !c.number?.toLowerCase().includes(fNum))  return;
-    if (fNam && !c.name?.toLowerCase().includes(fNam) && !c.en_name?.toLowerCase().includes(fNam)) return;
+    if (fNam   && !c.name?.toLowerCase().includes(fNam))     return;
+    if (fEnNam && !c.en_name?.toLowerCase().includes(fEnNam)) return;
     filtered.push({idx, card: c});
   });
 
@@ -799,7 +802,7 @@ function sortBy(col) {
 
 function clearFilters() {
   resetMs('ms-series'); resetMs('ms-section');
-  ['flt-number','flt-name'].forEach(id => $(id).value = '');
+  ['flt-number','flt-name','flt-en-name'].forEach(id => $(id).value = '');
   applyFilters();
 }
 
