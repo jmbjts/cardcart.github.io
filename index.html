@@ -330,10 +330,42 @@ tbody td {
   font-size: 13px;
 }
 
-/* ── Responsive: hide preview on narrow screens ── */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   #preview-panel { display: none; }
-  #filter-bar input { width: 100px; }
+  #filter-bar input { width: 110px; }
+  .ms-trigger { width: 140px; }
+  table { width: 650px; }
+}
+
+@media (max-width: 480px) {
+  /* Topbar */
+  #topbar { flex-wrap: wrap; padding: 6px 10px; gap: 4px; }
+  #topbar h1 { font-size: 13px; }
+  #last-updated { font-size: 10px; }
+  #topbar-right { gap: 6px; }
+
+  /* Tabbar */
+  #tabbar { padding: 0 8px; gap: 0; }
+  .tab { padding: 7px 10px; font-size: 12px; }
+  button.action { padding: 4px 8px; font-size: 11px; }
+
+  /* Filter bar */
+  #filter-bar { padding: 6px 10px; gap: 5px 8px; }
+  #filter-bar label { font-size: 12px; }
+  #filter-bar input { width: 120px; }
+  .ms-trigger { width: 130px; font-size: 11px; }
+  .ms-panel { min-width: 160px; }
+
+  /* Table — fixed pixel width forces horizontal scroll in the wrapper */
+  table { width: 650px; }
+
+  /* Footer */
+  #footer { padding: 4px 10px; font-size: 11px; gap: 8px; flex-wrap: wrap; }
+
+  /* Basket header */
+  #basket-header { flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
+  #basket-header-right { margin-left: 0; }
 }
 </style>
 </head>
