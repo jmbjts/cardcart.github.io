@@ -112,6 +112,7 @@ select:focus, input[type=text]:focus { border-color: var(--accent); }
 }
 #filter-bar label { color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
 #filter-bar input { width: 130px; }
+#filter-bar select { width: 140px; }
 
 /* ── Content area ── */
 #content-wrap {
@@ -337,8 +338,8 @@ tbody td {
 <div id="cards-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
 
   <div id="filter-bar">
-    <label>Series: <input type="text" id="flt-series"  placeholder="filter…" oninput="scheduleFilter()"></label>
-    <label>Section: <input type="text" id="flt-section" placeholder="filter…" oninput="scheduleFilter()"></label>
+    <label>Series: <select id="flt-series" onchange="applyFilters()"><option value="">All</option></select></label>
+    <label>Section: <select id="flt-section" onchange="applyFilters()"><option value="">All</option></select></label>
     <label>Card No.: <input type="text" id="flt-number" placeholder="filter…" oninput="scheduleFilter()"></label>
     <label>Name: <input type="text" id="flt-name"    placeholder="filter…" oninput="scheduleFilter()"></label>
     <button class="action" onclick="clearFilters()">Clear</button>
@@ -561,23 +562,32 @@ async function loadMeta() {
 }
 
 // ── Filtering & sorting ──────────────────────────────────────────────────────
+function populateDropdowns() {
+  const series  = [...new Set(cards.map(c => c.series))].sort();
+  const sections = [...new Set(cards.map(c => c.section))].sort();
+  const serSel = $('flt-series');
+  const secSel = $('flt-section');
+  series.forEach(v  => { const o = document.createElement('option'); o.value = v; o.textContent = v; serSel.appendChild(o); });
+  sections.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; secSel.appendChild(o); });
+}
+
 function scheduleFilter() {
   clearTimeout(filterTimer);
   filterTimer = setTimeout(applyFilters, 200);
 }
 
 function applyFilters() {
-  const fSer = $('flt-series').value.toLowerCase();
-  const fSec = $('flt-section').value.toLowerCase();
+  const fSer = $('flt-series').value;
+  const fSec = $('flt-section').value;
   const fNum = $('flt-number').value.toLowerCase();
   const fNam = $('flt-name').value.toLowerCase();
 
   filtered = [];
   cards.forEach((c, idx) => {
-    if (fSer && !c.series?.toLowerCase().includes(fSer))   return;
-    if (fSec && !c.section?.toLowerCase().includes(fSec))  return;
-    if (fNum && !c.number?.toLowerCase().includes(fNum))   return;
-    if (fNam && !c.name?.toLowerCase().includes(fNam))     return;
+    if (fSer && c.series !== fSer)                        return;
+    if (fSec && c.section !== fSec)                       return;
+    if (fNum && !c.number?.toLowerCase().includes(fNum))  return;
+    if (fNam && !c.name?.toLowerCase().includes(fNam))    return;
     filtered.push({idx, card: c});
   });
 
@@ -609,7 +619,8 @@ function sortBy(col) {
 }
 
 function clearFilters() {
-  ['flt-series','flt-section','flt-number','flt-name'].forEach(id => $(id).value = '');
+  ['flt-series','flt-section'].forEach(id => $(id).selectedIndex = 0);
+  ['flt-number','flt-name'].forEach(id => $(id).value = '');
   applyFilters();
 }
 
@@ -891,6 +902,7 @@ async function init() {
 
   await loadCSV();
   await loadMeta();
+  populateDropdowns();
   applyFilters();
   updateBasketBadge();
   updateBasketFooter();
