@@ -27,7 +27,7 @@ jobs:
       - name: Run scraper
         run: |
           # Read all URLs from yyt.txt and pass them as arguments to the scraper
-          python yuyu_scraper.py --out yuyu_cards_new.csv --names names.csv $(cat yyt.txt | tr '\n' ' ')
+          python yuyu_scraper.py --out yuyu_cards_new.csv --exact-names names_exact.csv --names names.csv $(cat yyt.txt | tr '\n' ' ')
 
       - name: Validate and replace CSV
         run: |
@@ -58,7 +58,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add meta.json
+          git add meta.json names.csv names_exact.csv
           [ -f yuyu_cards_latest.csv ] && git add yuyu_cards_latest.csv || true
           git diff --staged --quiet || git commit -m "data: update cards $(date -u +%Y-%m-%d)"
           git push
