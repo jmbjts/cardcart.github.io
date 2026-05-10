@@ -9,8 +9,8 @@
 <meta property="og:title" content="One Piece TCG Database">
 <meta property="og:description" content="Browse and track One Piece Card Game prices from yuyu-tei.jp. Filter by series, section, and card name. Updated daily.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://cardcard.site">
-<link rel="canonical" href="https://cardcard.site">
+<meta property="og:url" content="https://cardcart.site">
+<link rel="canonical" href="https://cardcart.site">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JXRF2KJ0KZ"></script>
 <script>
@@ -126,7 +126,7 @@ select:focus, input[type=text]:focus { border-color: var(--accent); }
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
 }
-#filter-bar label { color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+#filter-bar label { color: var(--text-dim); display: flex; align-items: center; gap: 4px; justify-content: flex-start; text-align: left; }
 #filter-bar input { width: 130px; }
 
 /* ── Multi-select dropdown ── */
@@ -188,7 +188,6 @@ thead th {
   white-space: nowrap;
   user-select: none;
   border-bottom: 1px solid var(--border);
-  position: relative; /* needed for resize handle */
   overflow: hidden;
 }
 thead th:hover { color: var(--accent); }
@@ -367,7 +366,7 @@ tbody td {
   background: var(--surface);
   border-top: 1px solid var(--border);
   padding: 5px 14px;
-  font-size: 6px;
+  font-size: 7px;
   color: var(--text-dim);
   text-align: center;
   line-height: 1.6;
@@ -384,10 +383,42 @@ tbody td {
   font-size: 13px;
 }
 
+/* ── Filter toggle bar (mobile only) ── */
+#filter-toggle-bar { display: none; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  #preview-panel { display: none; }
-  #filter-bar input { width: 110px; }
+  /* Filters collapse behind a toggle button */
+  #filter-toggle-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #filter-bar { display: none; }
+  #filter-bar.open { display: flex; }
+
+  /* Preview moves above the table as a horizontal strip */
+  #content-wrap { flex-direction: column; }
+  #preview-panel {
+    order: -1;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    height: 110px;
+    padding: 6px 10px;
+    gap: 10px;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #preview-panel h3 { display: none; }
+  #preview-img { max-width: 66px; max-height: 92px; margin-bottom: 0; flex-shrink: 0; }
+  #preview-info { font-size: 11px; line-height: 1.5; text-align: left; }
+
   .ms-trigger { width: 140px; }
   table { width: 820px; }
 }
@@ -404,14 +435,14 @@ tbody td {
   .tab { padding: 7px 10px; font-size: 12px; }
   button.action { padding: 4px 8px; font-size: 11px; }
 
-  /* Filter bar */
+  /* Filter bar (when open) */
   #filter-bar { padding: 6px 10px; gap: 5px 8px; }
   #filter-bar label { font-size: 12px; }
   #filter-bar input { width: 120px; }
   .ms-trigger { width: 130px; font-size: 11px; }
   .ms-panel { min-width: 160px; }
 
-  /* Table — fixed pixel width forces horizontal scroll in the wrapper */
+  /* Table */
   table { width: 820px; }
 
   /* Footer */
@@ -450,6 +481,10 @@ tbody td {
 <!-- ── Cards panel ─────────────────────────────────────── -->
 <div id="cards-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
 
+  <div id="filter-toggle-bar">
+    <button class="action" id="filter-toggle-btn" onclick="toggleFilters()">Filters ▾</button>
+  </div>
+
   <div id="filter-bar">
     <label>Series:
       <div class="multi-select" id="ms-series">
@@ -468,8 +503,7 @@ tbody td {
       </div>
     </label>
     <label>Card No.: <input type="text" id="flt-number"  placeholder="filter…" oninput="scheduleFilter()"></label>
-    <label>Name (JP): <input type="text" id="flt-name"   placeholder="filter…" oninput="scheduleFilter()"></label>
-    <label>Name (EN): <input type="text" id="flt-en-name" placeholder="filter…" oninput="scheduleFilter()"></label>
+    <label>Name: <input type="text" id="flt-name" placeholder="JP or EN…" oninput="scheduleFilter()"></label>
     <button class="action" onclick="clearFilters()">Clear</button>
   </div>
 
@@ -797,17 +831,16 @@ function scheduleFilter() {
 function applyFilters() {
   const fSer = getMsSelected('ms-series');
   const fSec = getMsSelected('ms-section');
-  const fNum = $('flt-number').value.toLowerCase();
-  const fNam   = $('flt-name').value.toLowerCase();
-  const fEnNam = $('flt-en-name').value.toLowerCase();
+  const fNum  = $('flt-number').value.toLowerCase();
+  const fName = $('flt-name').value.toLowerCase();
 
   filtered = [];
   cards.forEach((c, idx) => {
-    if (fSer && !fSer.has(c.series))                      return;
-    if (fSec && !fSec.has(c.section))                     return;
-    if (fNum && !c.number?.toLowerCase().includes(fNum))  return;
-    if (fNam   && !c.name?.toLowerCase().includes(fNam))     return;
-    if (fEnNam && !c.en_name?.toLowerCase().includes(fEnNam)) return;
+    if (fSer && !fSer.has(c.series))                     return;
+    if (fSec && !fSec.has(c.section))                    return;
+    if (fNum && !c.number?.toLowerCase().includes(fNum)) return;
+    if (fName && !c.name?.toLowerCase().includes(fName) &&
+                 !c.en_name?.toLowerCase().includes(fName)) return;
     filtered.push({idx, card: c});
   });
 
@@ -838,9 +871,16 @@ function sortBy(col) {
   applyFilters();
 }
 
+function toggleFilters() {
+  const bar = $('filter-bar');
+  const btn = $('filter-toggle-btn');
+  const open = bar.classList.toggle('open');
+  btn.textContent = open ? 'Filters ▴' : 'Filters ▾';
+}
+
 function clearFilters() {
   resetMs('ms-series'); resetMs('ms-section');
-  ['flt-number','flt-name','flt-en-name'].forEach(id => $(id).value = '');
+  ['flt-number','flt-name'].forEach(id => $(id).value = '');
   applyFilters();
 }
 
@@ -1091,11 +1131,21 @@ function exportBasketCSV() {
     .map(([key, qty]) => ({ key, qty, card: cards.find(c => cardKey(c) === key) }))
     .filter(x => x.card);
   if (!items.length) { alert('Your basket is empty.'); return; }
-  const rows = [['series','section','number','name','qty','unit_jpy','subtotal_jpy']];
+
+  const rate    = currency !== 'JPY' ? (rates[currency] ?? null) : null;
+  const headers = ['series','section','number','name','qty','unit_jpy','subtotal_jpy'];
+  if (rate) headers.push(`unit_${currency}`, `subtotal_${currency}`);
+
+  const rows = [headers];
   items.forEach(({ qty, card }) => {
     const jpy = parseJpy(card.price);
-    rows.push([card.series, card.section, card.number, card.name, qty,
-               jpy ?? '', jpy !== null ? jpy * qty : '']);
+    const row = [card.series, card.section, card.number, card.name, qty,
+                 jpy ?? '', jpy !== null ? jpy * qty : ''];
+    if (rate) {
+      row.push(jpy !== null ? +((jpy * rate).toFixed(4))         : '');
+      row.push(jpy !== null ? +((jpy * qty * rate).toFixed(4))   : '');
+    }
+    rows.push(row);
   });
   downloadCSV(rows, `yuyu_basket_${today()}.csv`);
 }
