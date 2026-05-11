@@ -630,7 +630,7 @@ let selectedIdx = null;
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
-function cardKey(c) { return `${c.series}|||${c.number}|||${c.name}`; }
+function cardKey(c) { return `${c.series}|||${c.section}|||${c.number}|||${c.name}`; }
 
 function parseJpy(str) {
   const d = String(str || '').replace(/[^\d]/g, '');
